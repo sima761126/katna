@@ -28,7 +28,51 @@ class CustomDiskWriter(KeyFrameDiskWriter):
         suffix = "keyframe"
 
         return "_".join([filename, suffix])
-        
+
+
+def get_video_duration(video_path):
+    """获取视频时长（秒）"""
+    cap = cv2.VideoCapture(video_path)
+    if not cap.isOpened():
+        raise ValueError(f"无法打开视频文件: {video_path}")
+
+    # 获取总帧数
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    # 获取帧率
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    # 计算时长（秒）
+    duration_seconds = total_frames / fps if fps > 0 else 0
+    cap.release()
+
+    return duration_seconds
+
+def calculate_keyframe_count(video_path, frames_per_minute=2):
+    """
+    根据视频时长计算应提取的关键帧数量
+
+    Args:
+        video_path: 视频文件路径
+        frames_per_minute: 每分钟提取的关键帧数，默认2张
+
+    Returns:
+        int: 关键帧数量（至少为1）
+    """
+    duration_seconds = get_video_duration(video_path)
+    duration_minutes = duration_seconds / 60
+
+    # 计算总帧数 = 分钟数 × 每分钟帧数
+    frame_count = int(duration_minutes * frames_per_minute)
+
+    # 确保至少提取1帧
+    frame_count = max(frame_count, 1)
+
+    # 打印详细信息
+    print(f"视频时长: {duration_minutes:.2f} 分钟 ({duration_seconds:.2f} 秒)")
+    print(f"提取规则: 每 {60 / frames_per_minute:.1f} 秒提取1张关键帧")
+    print(f"应提取关键帧数: {frame_count} 张")
+
+    return frame_count
+
 
 def main_dir():
     if len(sys.argv) ==1:
@@ -38,8 +82,8 @@ def main_dir():
 
     vd = Video()
 
-    no_of_frames_to_returned = 12
-
+    no_of_frames_to_returned = calculate_keyframe_count(dir_path, frames_per_minute=2) # 12
+    print('key frames:',no_of_frames_to_returned)
     diskwriter = KeyFrameDiskWriter(location="selectedframes")
 
     vd.extract_keyframes_from_videos_dir(
@@ -55,7 +99,7 @@ def main():
     #     multiprocessing.freeze_support()
 
     if len(sys.argv) ==1:
-        video_file_path = os.path.join(".", "tests", "data", "pos_video.mp4")
+        video_file_path = os.path.join(".", "tests", "data", "38623576720-1-192.mp4")
     else:
         video_file_path = sys.argv[1]
        
