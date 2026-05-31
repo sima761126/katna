@@ -106,7 +106,7 @@ def main():
     vd = Video()
 
     # number of images to be returned
-    no_of_frames_to_returned = 12
+    no_of_frames_to_returned = calculate_keyframe_count(video_file_path, frames_per_minute=1)  # 12
 
     diskwriter = KeyFrameDiskWriter(location="selectedframes")
 
